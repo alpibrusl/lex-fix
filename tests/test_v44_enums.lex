@@ -64,6 +64,42 @@ fn test_ord_status_roundtrip() -> Result[Unit, Str] {
   }
 }
 
+fn test_cxl_rej_reason_roundtrip() -> Result[Unit, Str] {
+  match en.cxl_rej_reason_from_str(en.cxl_rej_reason_to_str(UnknownOrder)) {
+    None    => fail("cxl_rej_reason roundtrip failed"),
+    Some(r) => assert_true(r == UnknownOrder, "UnknownOrder roundtrip"),
+  }
+}
+
+fn test_cxl_rej_reason_unknown() -> Result[Unit, Str] {
+  match en.cxl_rej_reason_from_str("9") {
+    None    => pass(),
+    Some(_) => fail("expected None for unknown CxlRejReason"),
+  }
+}
+
+fn test_cxl_rej_reason_all_variants() -> Result[Unit, Str] {
+  let t0 := en.cxl_rej_reason_to_str(TooLateToCancel)            == "0"
+  let t1 := en.cxl_rej_reason_to_str(UnknownOrder)               == "1"
+  let t2 := en.cxl_rej_reason_to_str(BrokerOption)               == "2"
+  let t3 := en.cxl_rej_reason_to_str(AlreadyPendingCxlOrReplace) == "3"
+  assert_true(t0 and t1 and t2 and t3, "all CxlRejReason variants")
+}
+
+fn test_cxl_rej_response_to_roundtrip() -> Result[Unit, Str] {
+  match en.cxl_rej_response_to_from_str(en.cxl_rej_response_to_to_str(ResponseToReplace)) {
+    None    => fail("CxlRejResponseTo roundtrip failed"),
+    Some(r) => assert_true(r == ResponseToReplace, "ResponseToReplace roundtrip"),
+  }
+}
+
+fn test_cxl_rej_response_to_unknown() -> Result[Unit, Str] {
+  match en.cxl_rej_response_to_from_str("9") {
+    None    => pass(),
+    Some(_) => fail("expected None for unknown CxlRejResponseTo"),
+  }
+}
+
 fn suite() -> List[Result[Unit, Str]] {
   [
     test_side_to_str(),
@@ -75,6 +111,11 @@ fn suite() -> List[Result[Unit, Str]] {
     test_tif_roundtrip(),
     test_exec_type_roundtrip(),
     test_ord_status_roundtrip(),
+    test_cxl_rej_reason_roundtrip(),
+    test_cxl_rej_reason_unknown(),
+    test_cxl_rej_reason_all_variants(),
+    test_cxl_rej_response_to_roundtrip(),
+    test_cxl_rej_response_to_unknown(),
   ]
 }
 

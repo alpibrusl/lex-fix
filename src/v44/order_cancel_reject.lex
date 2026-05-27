@@ -106,7 +106,7 @@ fn from_fix_message(m :: msg.FixMessage) -> Result[OrderCancelReject, List[e.Fix
                 Err(err)  => Err([err]),
                 Ok(sndr)  => match field.require(fields, tag.target_comp_id()) {
                   Err(err) => Err([err]),
-                  Ok(tgt)  =>
+                  Ok(tgt)  => {
                     let crr := match field.get(fields, tag.cxl_rej_reason()) {
                       None    => None,
                       Some(s) => en.cxl_rej_reason_from_str(s),
@@ -121,7 +121,8 @@ fn from_fix_message(m :: msg.FixMessage) -> Result[OrderCancelReject, List[e.Fix
                       sender_comp_id:      sndr,
                       target_comp_id:      tgt,
                       text:                field.get(fields, tag.text()),
-                    }),
+                    })
+                  },
                 },
               },
             },
