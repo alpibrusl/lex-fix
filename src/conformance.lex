@@ -147,6 +147,109 @@ fn validate_execution_report(m :: msg.FixMessage) -> Result[msg.FixMessage, List
   }
 }
 
+# Validate a FIX 4.4 Order Cancel Request (MsgType=F).
+# Required tags: 11 (ClOrdID), 41 (OrigClOrdID), 55 (Symbol),
+#                54 (Side), 60 (TransactTime), 38 (OrderQty).
+# Side must be "1" or "2".
+fn validate_order_cancel(m :: msg.FixMessage) -> Result[msg.FixMessage, List[e.FixError]] {
+  let errs0  := []
+  let fields := m.fields
+
+  let errs1 := match msg.msg_type(m) {
+    None     => add_error(errs0, MissingRequiredTag(tag.msg_type())),
+    Some(mt) => if mt == tag.mt_order_cancel() { errs0 }
+                else { add_error(errs0, UnsupportedMsgType(mt)) },
+  }
+
+  let errs2 := check_required(fields, tag.cl_ord_id(),      errs1)
+  let errs3 := check_required(fields, tag.orig_cl_ord_id(), errs2)
+  let errs4 := check_required(fields, tag.symbol(),         errs3)
+  let errs5 := check_required(fields, tag.side(),           errs4)
+  let errs6 := check_required(fields, tag.transact_time(),  errs5)
+  let errs7 := check_required(fields, tag.order_qty(),      errs6)
+  let errs8 := check_one_of(fields, tag.side(), ["1", "2"], errs7)
+
+  if list.len(errs8) == 0 { Ok(m) } else { Err(errs8) }
+}
+
+# Validate a FIX 4.4 Order Cancel/Replace Request (MsgType=G).
+# Required tags: 11 (ClOrdID), 41 (OrigClOrdID), 55 (Symbol),
+#                54 (Side), 60 (TransactTime), 38 (OrderQty), 40 (OrdType).
+# If OrdType is Limit(2) or StopLimit(4), Price (44) is required.
+fn validate_order_cancel_replace(m :: msg.FixMessage) -> Result[msg.FixMessage, List[e.FixError]] {
+  let errs0  := []
+  let fields := m.fields
+
+  let errs1 := match msg.msg_type(m) {
+    None     => add_error(errs0, MissingRequiredTag(tag.msg_type())),
+    Some(mt) => if mt == tag.mt_order_cancel_replace() { errs0 }
+                else { add_error(errs0, UnsupportedMsgType(mt)) },
+  }
+
+  let errs2 := check_required(fields, tag.cl_ord_id(),      errs1)
+  let errs3 := check_required(fields, tag.orig_cl_ord_id(), errs2)
+  let errs4 := check_required(fields, tag.symbol(),         errs3)
+  let errs5 := check_required(fields, tag.side(),           errs4)
+  let errs6 := check_required(fields, tag.transact_time(),  errs5)
+  let errs7 := check_required(fields, tag.order_qty(),      errs6)
+  let errs8 := check_required(fields, tag.ord_type(),       errs7)
+  let errs9 := check_one_of(fields, tag.side(), ["1", "2"], errs8)
+  let errs10 := check_one_of(fields, tag.ord_type(), ["1", "2", "3", "4"], errs9)
+  let errs11 := match field.get(fields, tag.ord_type()) {
+    None    => errs10,
+    Some(t) => if t == "2" or t == "4" { check_required(fields, tag.price(), errs10) }
+               else { errs10 },
+  }
+
+  if list.len(errs11) == 0 { Ok(m) } else { Err(errs11) }
+}
+
+# Validate a FIX 4.4 Order Status Request (MsgType=H).
+# Required tags: 11 (ClOrdID), 55 (Symbol), 54 (Side).
+# Side must be "1" or "2".
+fn validate_order_status(m :: msg.FixMessage) -> Result[msg.FixMessage, List[e.FixError]] {
+  let errs0  := []
+  let fields := m.fields
+
+  let errs1 := match msg.msg_type(m) {
+    None     => add_error(errs0, MissingRequiredTag(tag.msg_type())),
+    Some(mt) => if mt == tag.mt_order_status() { errs0 }
+                else { add_error(errs0, UnsupportedMsgType(mt)) },
+  }
+
+  let errs2 := check_required(fields, tag.cl_ord_id(), errs1)
+  let errs3 := check_required(fields, tag.symbol(),    errs2)
+  let errs4 := check_required(fields, tag.side(),      errs3)
+  let errs5 := check_one_of(fields, tag.side(), ["1", "2"], errs4)
+
+  if list.len(errs5) == 0 { Ok(m) } else { Err(errs5) }
+}
+
+# Validate a FIX 4.4 Order Cancel Reject (MsgType=9).
+# Required tags: 11 (ClOrdID), 41 (OrigClOrdID), 39 (OrdStatus),
+#                434 (CxlRejResponseTo).
+fn validate_order_cancel_reject(m :: msg.FixMessage) -> Result[msg.FixMessage, List[e.FixError]] {
+  let errs0  := []
+  let fields := m.fields
+
+  let errs1 := match msg.msg_type(m) {
+    None     => add_error(errs0, MissingRequiredTag(tag.msg_type())),
+    Some(mt) => if mt == tag.mt_order_cancel_reject() { errs0 }
+                else { add_error(errs0, UnsupportedMsgType(mt)) },
+  }
+
+  let errs2 := check_required(fields, tag.cl_ord_id(),          errs1)
+  let errs3 := check_required(fields, tag.orig_cl_ord_id(),     errs2)
+  let errs4 := check_required(fields, tag.ord_status(),         errs3)
+  let errs5 := check_required(fields, tag.cxl_rej_response_to(), errs4)
+  let errs6 := check_one_of(fields, tag.ord_status(),
+                 ["0", "1", "2", "4", "8", "A"], errs5)
+  let errs7 := check_one_of(fields, tag.cxl_rej_response_to(),
+                 ["1", "2"], errs6)
+
+  if list.len(errs7) == 0 { Ok(m) } else { Err(errs7) }
+}
+
 # All violations as a list of human-readable strings.
 fn describe_errors(errs :: List[e.FixError]) -> List[Str] {
   list.map(errs, fn (err :: e.FixError) -> Str { e.describe(err) })

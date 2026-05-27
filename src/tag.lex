@@ -22,8 +22,10 @@ fn mt_execution_report()  -> Str { "8" }
 fn mt_heartbeat()         -> Str { "0" }
 fn mt_logon()             -> Str { "A" }
 fn mt_logout()            -> Str { "5" }
-fn mt_order_cancel()      -> Str { "F" }
-fn mt_order_status()      -> Str { "H" }
+fn mt_order_cancel()         -> Str { "F" }
+fn mt_order_cancel_replace() -> Str { "G" }
+fn mt_order_status()         -> Str { "H" }
+fn mt_order_cancel_reject()  -> Str { "9" }
 
 # ---- Order / execution fields ------------------------------------
 fn cl_ord_id()         -> Int { 11 }
@@ -48,5 +50,8 @@ fn last_px()           -> Int { 31 }
 fn last_qty()          -> Int { 32 }
 fn text()              -> Int { 58 }
 fn currency_tag()      -> Int { 15 }
-fn on_behalf_of()      -> Int { 115 }
-fn deliver_to()        -> Int { 128 }
+fn on_behalf_of()         -> Int { 115 }
+fn deliver_to()           -> Int { 128 }
+fn orig_cl_ord_id()       -> Int { 41 }
+fn cxl_rej_reason()       -> Int { 102 }
+fn cxl_rej_response_to()  -> Int { 434 }

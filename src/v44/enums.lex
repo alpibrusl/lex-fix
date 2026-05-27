@@ -183,10 +183,66 @@ fn ord_status_from_str(s :: Str) -> Option[OrdStatus] {
   else { None } } } } } }
 }
 
+# ---- CxlRejReason (tag 102) -------------------------------------
+
+type CxlRejReason =
+    TooLateToCancel
+  | UnknownOrder
+  | BrokerOption
+  | AlreadyPendingCxlOrReplace
+
+fn cxl_rej_reason_to_str(r :: CxlRejReason) -> Str
+  examples {
+    cxl_rej_reason_to_str(TooLateToCancel)            => "0",
+    cxl_rej_reason_to_str(UnknownOrder)               => "1",
+    cxl_rej_reason_to_str(BrokerOption)               => "2",
+    cxl_rej_reason_to_str(AlreadyPendingCxlOrReplace) => "3",
+  }
+{
+  match r {
+    TooLateToCancel            => "0",
+    UnknownOrder               => "1",
+    BrokerOption               => "2",
+    AlreadyPendingCxlOrReplace => "3",
+  }
+}
+
+fn cxl_rej_reason_from_str(s :: Str) -> Option[CxlRejReason] {
+  if s == "0" { Some(TooLateToCancel) }
+  else { if s == "1" { Some(UnknownOrder) }
+  else { if s == "2" { Some(BrokerOption) }
+  else { if s == "3" { Some(AlreadyPendingCxlOrReplace) }
+  else { None } } } }
+}
+
+# ---- CxlRejResponseTo (tag 434) ---------------------------------
+
+type CxlRejResponseTo = ResponseToCancel | ResponseToReplace
+
+fn cxl_rej_response_to_to_str(r :: CxlRejResponseTo) -> Str
+  examples {
+    cxl_rej_response_to_to_str(ResponseToCancel)  => "1",
+    cxl_rej_response_to_to_str(ResponseToReplace) => "2",
+  }
+{
+  match r {
+    ResponseToCancel  => "1",
+    ResponseToReplace => "2",
+  }
+}
+
+fn cxl_rej_response_to_from_str(s :: Str) -> Option[CxlRejResponseTo] {
+  if s == "1" { Some(ResponseToCancel) }
+  else { if s == "2" { Some(ResponseToReplace) }
+  else { None } }
+}
+
 # ---- All-values catalogs for schema validation -------------------
 
-fn all_sides()          -> List[Str] { ["1", "2"] }
-fn all_ord_types()      -> List[Str] { ["1", "2", "3", "4"] }
-fn all_time_in_forces() -> List[Str] { ["0", "1", "3", "4", "6"] }
-fn all_exec_types()     -> List[Str] { ["0", "1", "2", "4", "5", "8", "A", "E"] }
-fn all_ord_statuses()   -> List[Str] { ["0", "1", "2", "4", "8", "A"] }
+fn all_sides()                -> List[Str] { ["1", "2"] }
+fn all_ord_types()            -> List[Str] { ["1", "2", "3", "4"] }
+fn all_time_in_forces()       -> List[Str] { ["0", "1", "3", "4", "6"] }
+fn all_exec_types()           -> List[Str] { ["0", "1", "2", "4", "5", "8", "A", "E"] }
+fn all_ord_statuses()         -> List[Str] { ["0", "1", "2", "4", "8", "A"] }
+fn all_cxl_rej_reasons()      -> List[Str] { ["0", "1", "2", "3"] }
+fn all_cxl_rej_response_tos() -> List[Str] { ["1", "2"] }
