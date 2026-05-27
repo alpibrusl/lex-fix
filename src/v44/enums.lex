@@ -25,8 +25,8 @@ fn side_to_str(s :: Side) -> Str
 
 fn side_from_str(s :: Str) -> Option[Side] {
   if s == "1" { Some(Buy) }
-  else if s == "2" { Some(Sell) }
-  else { None }
+  else { if s == "2" { Some(Sell) }
+  else { None } }
 }
 
 # ---- OrdType (tag 40) --------------------------------------------
@@ -51,18 +51,18 @@ fn ord_type_to_str(t :: OrdType) -> Str
 
 fn ord_type_from_str(s :: Str) -> Option[OrdType] {
   if s == "1" { Some(Market) }
-  else if s == "2" { Some(Limit) }
-  else if s == "3" { Some(Stop) }
-  else if s == "4" { Some(StopLimit) }
-  else { None }
+  else { if s == "2" { Some(Limit) }
+  else { if s == "3" { Some(Stop) }
+  else { if s == "4" { Some(StopLimit) }
+  else { None } } } }
 }
 
 fn ord_type_requires_price(t :: OrdType) -> Bool {
   match t {
-    Limit     => True,
-    StopLimit => True,
-    Market    => False,
-    Stop      => False,
+    Limit     => true,
+    StopLimit => true,
+    Market    => false,
+    Stop      => false,
   }
 }
 
@@ -94,11 +94,11 @@ fn tif_to_str(t :: TimeInForce) -> Str
 
 fn tif_from_str(s :: Str) -> Option[TimeInForce] {
   if s == "0" { Some(Day) }
-  else if s == "1" { Some(Gtc) }
-  else if s == "3" { Some(Ioc) }
-  else if s == "4" { Some(Fok) }
-  else if s == "6" { Some(AtClose) }
-  else { None }
+  else { if s == "1" { Some(Gtc) }
+  else { if s == "3" { Some(Ioc) }
+  else { if s == "4" { Some(Fok) }
+  else { if s == "6" { Some(AtClose) }
+  else { None } } } } }
 }
 
 # ---- ExecType (tag 150) ------------------------------------------
@@ -122,27 +122,27 @@ fn exec_type_to_str(t :: ExecType) -> Str
   }
 {
   match t {
-    ExecNew          => "0",
-    ExecPartialFill  => "1",
-    ExecFill         => "2",
-    ExecCanceled     => "4",
-    ExecReplaced     => "5",
-    ExecRejected     => "8",
-    ExecPendingNew   => "A",
+    ExecNew           => "0",
+    ExecPartialFill   => "1",
+    ExecFill          => "2",
+    ExecCanceled      => "4",
+    ExecReplaced      => "5",
+    ExecRejected      => "8",
+    ExecPendingNew    => "A",
     ExecPendingCancel => "E",
   }
 }
 
 fn exec_type_from_str(s :: Str) -> Option[ExecType] {
   if s == "0" { Some(ExecNew) }
-  else if s == "1" { Some(ExecPartialFill) }
-  else if s == "2" { Some(ExecFill) }
-  else if s == "4" { Some(ExecCanceled) }
-  else if s == "5" { Some(ExecReplaced) }
-  else if s == "8" { Some(ExecRejected) }
-  else if s == "A" { Some(ExecPendingNew) }
-  else if s == "E" { Some(ExecPendingCancel) }
-  else { None }
+  else { if s == "1" { Some(ExecPartialFill) }
+  else { if s == "2" { Some(ExecFill) }
+  else { if s == "4" { Some(ExecCanceled) }
+  else { if s == "5" { Some(ExecReplaced) }
+  else { if s == "8" { Some(ExecRejected) }
+  else { if s == "A" { Some(ExecPendingNew) }
+  else { if s == "E" { Some(ExecPendingCancel) }
+  else { None } } } } } } } }
 }
 
 # ---- OrdStatus (tag 39) ------------------------------------------
@@ -175,12 +175,12 @@ fn ord_status_to_str(s :: OrdStatus) -> Str
 
 fn ord_status_from_str(s :: Str) -> Option[OrdStatus] {
   if s == "0" { Some(StatusNew) }
-  else if s == "1" { Some(StatusPartiallyFilled) }
-  else if s == "2" { Some(StatusFilled) }
-  else if s == "4" { Some(StatusCanceled) }
-  else if s == "8" { Some(StatusRejected) }
-  else if s == "A" { Some(StatusPendingNew) }
-  else { None }
+  else { if s == "1" { Some(StatusPartiallyFilled) }
+  else { if s == "2" { Some(StatusFilled) }
+  else { if s == "4" { Some(StatusCanceled) }
+  else { if s == "8" { Some(StatusRejected) }
+  else { if s == "A" { Some(StatusPendingNew) }
+  else { None } } } } } }
 }
 
 # ---- All-values catalogs for schema validation -------------------

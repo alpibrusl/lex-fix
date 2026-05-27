@@ -65,3 +65,23 @@ fn test_set_override() -> Result[Unit, Str] {
     Some(v) => assert_true(v == "GOOG", "overridden symbol"),
   }
 }
+
+fn suite() -> List[Result[Unit, Str]] {
+  [
+    test_get_existing(),
+    test_get_missing(),
+    test_require_ok(),
+    test_require_missing(),
+    test_has_present(),
+    test_has_absent(),
+    test_set_new(),
+    test_set_override(),
+  ]
+}
+
+fn run_all() -> Int {
+  list.fold(suite(), 0,
+    fn (n :: Int, r :: Result[Unit, Str]) -> Int {
+      match r { Ok(_) => n, Err(_) => n + 1 }
+    })
+}

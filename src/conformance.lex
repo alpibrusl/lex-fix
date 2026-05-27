@@ -107,7 +107,7 @@ fn validate_new_order(m :: msg.FixMessage) -> Result[msg.FixMessage, List[e.FixE
   let errs11 := check_one_of(fields, tag.time_in_force(),
                   ["0", "1", "3", "4", "6"], errs10)
 
-  if list.length(errs11) == 0 {
+  if list.len(errs11) == 0 {
     Ok(m)
   } else {
     Err(errs11)
@@ -140,7 +140,7 @@ fn validate_execution_report(m :: msg.FixMessage) -> Result[msg.FixMessage, List
   let errs11 := check_required(fields, tag.leaves_qty(), errs10)
   let errs12 := check_required(fields, tag.avg_px(),    errs11)
 
-  if list.length(errs12) == 0 {
+  if list.len(errs12) == 0 {
     Ok(m)
   } else {
     Err(errs12)

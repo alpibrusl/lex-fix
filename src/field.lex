@@ -46,8 +46,8 @@ fn require(fields :: List[FixField], t :: Int) -> Result[Str, e.FixError] {
 
 fn has(fields :: List[FixField], t :: Int) -> Bool {
   match get(fields, t) {
-    Some(_) => True,
-    None    => False,
+    Some(_) => true,
+    None    => false,
   }
 }
 
@@ -71,8 +71,8 @@ fn validate_one_of(
   match get(fields, t) {
     None    => None,
     Some(v) => {
-      let found := list.fold(allowed, False,
-        fn (acc :: Bool, a :: Str) -> Bool { if acc { True } else { v == a } })
+      let found := list.fold(allowed, false,
+        fn (acc :: Bool, a :: Str) -> Bool { if acc { true } else { v == a } })
       if found { None } else { Some(InvalidTagValue(t, v)) }
     },
   }

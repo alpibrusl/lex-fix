@@ -104,68 +104,54 @@ fn to_fix_message(nos :: NewOrderSingle, seq_num :: Int) -> msg.FixMessage {
 # Returns `Err` with a list of all parse failures rather than stopping
 # at the first one — callers see every problem at once.
 
+# Parse a FixMessage into a typed NewOrderSingle. Fails fast on the first
+# missing required field or unknown enum value, returning Err([error]).
 fn from_fix_message(m :: msg.FixMessage) -> Result[NewOrderSingle, List[e.FixError]] {
   let fields := m.fields
-  let r_cl_ord_id      := field.require(fields, tag.cl_ord_id())
-  let r_symbol         := field.require(fields, tag.symbol())
-  let r_side_str       := field.require(fields, tag.side())
-  let r_order_qty_str  := field.require(fields, tag.order_qty())
-  let r_ord_type_str   := field.require(fields, tag.ord_type())
-  let r_transact_time  := field.require(fields, tag.transact_time())
-  let r_sender         := field.require(fields, tag.sender_comp_id())
-  let r_target         := field.require(fields, tag.target_comp_id())
-  let r_tif_str        := field.require(fields, tag.time_in_force())
-
-  let errs := list.fold(
-    [r_cl_ord_id, r_symbol, r_side_str, r_order_qty_str,
-     r_ord_type_str, r_transact_time, r_sender, r_target, r_tif_str],
-    [],
-    fn (acc :: List[e.FixError], r :: Result[Str, e.FixError]) -> List[e.FixError] {
-      match r {
-        Ok(_)  => acc,
-        Err(e) => list.concat(acc, [e]),
-      }
-    })
-
-  if list.length(errs) > 0 {
-    Err(errs)
-  } else {
-    match (r_cl_ord_id, r_symbol, r_side_str, r_order_qty_str,
-           r_ord_type_str, r_transact_time, r_sender, r_target, r_tif_str) {
-      (Ok(coi), Ok(sym), Ok(s_str), Ok(qty_str),
-       Ok(ot_str), Ok(tt), Ok(sndr), Ok(tgt), Ok(tif_str)) => {
-        match en.side_from_str(s_str) {
-          None    => Err([InvalidTagValue(tag.side(), s_str)]),
-          Some(s) => {
-            match en.ord_type_from_str(ot_str) {
-              None     => Err([InvalidTagValue(tag.ord_type(), ot_str)]),
-              Some(ot) => {
-                match en.tif_from_str(tif_str) {
-                  None      => Err([InvalidTagValue(tag.time_in_force(), tif_str)]),
-                  Some(tif) => {
-                    let price_opt := field.get(fields, tag.price())
-                    let acct_opt  := field.get(fields, tag.account())
-                    Ok({
-                      cl_ord_id:      coi,
-                      symbol:         sym,
-                      side:           s,
-                      order_qty:      0,
-                      ord_type:       ot,
-                      price:          price_opt,
-                      time_in_force:  tif,
-                      transact_time:  tt,
-                      sender_comp_id: sndr,
-                      target_comp_id: tgt,
-                      account:        acct_opt,
-                    })
+  match field.require(fields, tag.cl_ord_id()) {
+    Err(err)  => Err([err]),
+    Ok(coi)   => match field.require(fields, tag.symbol()) {
+      Err(err)  => Err([err]),
+      Ok(sym)   => match field.require(fields, tag.side()) {
+        Err(err)  => Err([err]),
+        Ok(s_str) => match en.side_from_str(s_str) {
+          None      => Err([InvalidTagValue(tag.side(), s_str)]),
+          Some(s)   => match field.require(fields, tag.ord_type()) {
+            Err(err)   => Err([err]),
+            Ok(ot_str) => match en.ord_type_from_str(ot_str) {
+              None       => Err([InvalidTagValue(tag.ord_type(), ot_str)]),
+              Some(ot)   => match field.require(fields, tag.time_in_force()) {
+                Err(err)    => Err([err]),
+                Ok(tif_str) => match en.tif_from_str(tif_str) {
+                  None        => Err([InvalidTagValue(tag.time_in_force(), tif_str)]),
+                  Some(tif)   => match field.require(fields, tag.transact_time()) {
+                    Err(err) => Err([err]),
+                    Ok(tt)   => match field.require(fields, tag.sender_comp_id()) {
+                      Err(err)  => Err([err]),
+                      Ok(sndr)  => match field.require(fields, tag.target_comp_id()) {
+                        Err(err) => Err([err]),
+                        Ok(tgt)  => Ok({
+                          cl_ord_id:      coi,
+                          symbol:         sym,
+                          side:           s,
+                          order_qty:      0,
+                          ord_type:       ot,
+                          price:          field.get(fields, tag.price()),
+                          time_in_force:  tif,
+                          transact_time:  tt,
+                          sender_comp_id: sndr,
+                          target_comp_id: tgt,
+                          account:        field.get(fields, tag.account()),
+                        }),
+                      },
+                    },
                   },
-                }
+                },
               },
-            }
+            },
           },
-        }
+        },
       },
-      _ => Err(errs),
-    }
+    },
   }
 }

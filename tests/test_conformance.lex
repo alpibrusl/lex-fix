@@ -49,7 +49,7 @@ fn test_missing_symbol_fails() -> Result[Unit, Str] {
   let m := msg.new(fields)
   match conf.validate_new_order(m) {
     Ok(_)   => fail("missing symbol should fail"),
-    Err(es) => assert_true(list.length(es) > 0, "has errors"),
+    Err(es) => assert_true(list.len(es) > 0, "has errors"),
   }
 }
 
@@ -59,7 +59,7 @@ fn test_invalid_side_fails() -> Result[Unit, Str] {
   let m      := msg.new(fields)
   match conf.validate_new_order(m) {
     Ok(_)   => fail("invalid side should fail"),
-    Err(es) => assert_true(list.length(es) > 0, "has errors"),
+    Err(es) => assert_true(list.len(es) > 0, "has errors"),
   }
 }
 
@@ -73,6 +73,22 @@ fn test_limit_without_price_fails() -> Result[Unit, Str] {
   let m := msg.new(fields)
   match conf.validate_new_order(m) {
     Ok(_)   => fail("limit without price should fail"),
-    Err(es) => assert_true(list.length(es) > 0, "has errors"),
+    Err(es) => assert_true(list.len(es) > 0, "has errors"),
   }
+}
+
+fn suite() -> List[Result[Unit, Str]] {
+  [
+    test_valid_order_passes(),
+    test_missing_symbol_fails(),
+    test_invalid_side_fails(),
+    test_limit_without_price_fails(),
+  ]
+}
+
+fn run_all() -> Int {
+  list.fold(suite(), 0,
+    fn (n :: Int, r :: Result[Unit, Str]) -> Int {
+      match r { Ok(_) => n, Err(_) => n + 1 }
+    })
 }

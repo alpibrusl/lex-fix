@@ -73,70 +73,63 @@ fn to_fix_message(
 }
 
 fn from_fix_message(m :: msg.FixMessage) -> Result[ExecutionReport, List[e.FixError]] {
-  let fields     := m.fields
-  let r_exec_id  := field.require(fields, tag.exec_id())
-  let r_order_id := field.require(fields, tag.order_id())
-  let r_cl_ord   := field.require(fields, tag.cl_ord_id())
-  let r_et_str   := field.require(fields, tag.exec_type())
-  let r_os_str   := field.require(fields, tag.ord_status())
-  let r_symbol   := field.require(fields, tag.symbol())
-  let r_side_str := field.require(fields, tag.side())
-  let r_oqty     := field.require(fields, tag.order_qty())
-  let r_cqty     := field.require(fields, tag.cum_qty())
-  let r_lqty     := field.require(fields, tag.leaves_qty())
-  let r_avgpx    := field.require(fields, tag.avg_px())
-
-  let errs := list.fold(
-    [r_exec_id, r_order_id, r_cl_ord, r_et_str, r_os_str,
-     r_symbol, r_side_str, r_oqty, r_cqty, r_lqty, r_avgpx],
-    [],
-    fn (acc :: List[e.FixError], r :: Result[Str, e.FixError]) -> List[e.FixError] {
-      match r {
-        Ok(_)  => acc,
-        Err(e) => list.concat(acc, [e]),
-      }
-    })
-
-  if list.length(errs) > 0 {
-    Err(errs)
-  } else {
-    match (r_exec_id, r_order_id, r_cl_ord, r_et_str, r_os_str,
-           r_symbol, r_side_str, r_oqty, r_cqty, r_lqty, r_avgpx) {
-      (Ok(ei), Ok(oi), Ok(coi), Ok(et_s), Ok(os_s),
-       Ok(sym), Ok(s_s), Ok(oqty), Ok(cqty), Ok(lqty), Ok(apx)) => {
-        match en.exec_type_from_str(et_s) {
-          None     => Err([InvalidTagValue(tag.exec_type(), et_s)]),
-          Some(et) => {
-            match en.ord_status_from_str(os_s) {
-              None     => Err([InvalidTagValue(tag.ord_status(), os_s)]),
-              Some(os) => {
-                match en.side_from_str(s_s) {
-                  None    => Err([InvalidTagValue(tag.side(), s_s)]),
-                  Some(s) => {
-                    Ok({
-                      exec_id:    ei,
-                      order_id:   oi,
-                      cl_ord_id:  coi,
-                      exec_type:  et,
-                      ord_status: os,
-                      symbol:     sym,
-                      side:       s,
-                      order_qty:  oqty,
-                      cum_qty:    cqty,
-                      leaves_qty: lqty,
-                      avg_px:     apx,
-                      last_px:    field.get(fields, tag.last_px()),
-                      last_qty:   field.get(fields, tag.last_qty()),
-                      text:       field.get(fields, tag.text()),
-                    })
+  let fields := m.fields
+  match field.require(fields, tag.exec_id()) {
+    Err(err)  => Err([err]),
+    Ok(ei)    => match field.require(fields, tag.order_id()) {
+      Err(err)  => Err([err]),
+      Ok(oi)    => match field.require(fields, tag.cl_ord_id()) {
+        Err(err)  => Err([err]),
+        Ok(coi)   => match field.require(fields, tag.exec_type()) {
+          Err(err)  => Err([err]),
+          Ok(et_s)  => match en.exec_type_from_str(et_s) {
+            None      => Err([InvalidTagValue(tag.exec_type(), et_s)]),
+            Some(et)  => match field.require(fields, tag.ord_status()) {
+              Err(err)  => Err([err]),
+              Ok(os_s)  => match en.ord_status_from_str(os_s) {
+                None      => Err([InvalidTagValue(tag.ord_status(), os_s)]),
+                Some(os)  => match field.require(fields, tag.symbol()) {
+                  Err(err)  => Err([err]),
+                  Ok(sym)   => match field.require(fields, tag.side()) {
+                    Err(err)  => Err([err]),
+                    Ok(s_s)   => match en.side_from_str(s_s) {
+                      None    => Err([InvalidTagValue(tag.side(), s_s)]),
+                      Some(s) => match field.require(fields, tag.order_qty()) {
+                        Err(err)  => Err([err]),
+                        Ok(oqty)  => match field.require(fields, tag.cum_qty()) {
+                          Err(err)  => Err([err]),
+                          Ok(cqty)  => match field.require(fields, tag.leaves_qty()) {
+                            Err(err)  => Err([err]),
+                            Ok(lqty)  => match field.require(fields, tag.avg_px()) {
+                              Err(err) => Err([err]),
+                              Ok(apx)  => Ok({
+                                exec_id:    ei,
+                                order_id:   oi,
+                                cl_ord_id:  coi,
+                                exec_type:  et,
+                                ord_status: os,
+                                symbol:     sym,
+                                side:       s,
+                                order_qty:  oqty,
+                                cum_qty:    cqty,
+                                leaves_qty: lqty,
+                                avg_px:     apx,
+                                last_px:    field.get(fields, tag.last_px()),
+                                last_qty:   field.get(fields, tag.last_qty()),
+                                text:       field.get(fields, tag.text()),
+                              }),
+                            },
+                          },
+                        },
+                      },
+                    },
                   },
-                }
+                },
               },
-            }
+            },
           },
-        }
+        },
       },
-      _ => Err(errs),
-    }
+    },
   }
 }

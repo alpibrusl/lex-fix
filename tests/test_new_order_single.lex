@@ -65,3 +65,20 @@ fn test_to_fix_message_no_account() -> Result[Unit, Str] {
   let m := nos.to_fix_message(sample_nos(), 1)
   assert_true(not (field.has(m.fields, tag.account())), "no account")
 }
+
+fn suite() -> List[Result[Unit, Str]] {
+  [
+    test_to_fix_message_msg_type(),
+    test_to_fix_message_symbol(),
+    test_to_fix_message_side(),
+    test_to_fix_message_price(),
+    test_to_fix_message_no_account(),
+  ]
+}
+
+fn run_all() -> Int {
+  list.fold(suite(), 0,
+    fn (n :: Int, r :: Result[Unit, Str]) -> Int {
+      match r { Ok(_) => n, Err(_) => n + 1 }
+    })
+}

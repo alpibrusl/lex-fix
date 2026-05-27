@@ -1,6 +1,7 @@
 # tests for src/v44/enums.lex
 
 import "std.str"        as str
+import "std.list"       as list
 import "../src/v44/enums" as en
 
 fn pass() -> Result[Unit, Str] { Ok(()) }
@@ -61,4 +62,25 @@ fn test_ord_status_roundtrip() -> Result[Unit, Str] {
     None    => fail("ord status roundtrip failed"),
     Some(s) => assert_true(s == StatusNew, "New roundtrip"),
   }
+}
+
+fn suite() -> List[Result[Unit, Str]] {
+  [
+    test_side_to_str(),
+    test_side_from_str_buy(),
+    test_side_from_str_unknown(),
+    test_ord_type_roundtrip(),
+    test_ord_type_requires_price_limit(),
+    test_ord_type_requires_price_market(),
+    test_tif_roundtrip(),
+    test_exec_type_roundtrip(),
+    test_ord_status_roundtrip(),
+  ]
+}
+
+fn run_all() -> Int {
+  list.fold(suite(), 0,
+    fn (n :: Int, r :: Result[Unit, Str]) -> Int {
+      match r { Ok(_) => n, Err(_) => n + 1 }
+    })
 }
