@@ -1,7 +1,7 @@
 [package]
 name    = "lex-fix"
 version = "0.1.0"
-lex     = "0.9.4"
+lex     = "0.9.5"
 [dependencies]
 lex-schema = { path = "../lex-schema" }
 lex-money  = { path = "../lex-money" }
