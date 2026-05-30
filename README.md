@@ -14,10 +14,14 @@ Requires **lex-lang 0.9.4+**.
 - **`src/error.lex`** — `FixError` ADT: `MissingRequiredTag`, `InvalidTagValue`, `UnsupportedMsgType`, `ConformanceViolation`, `ParseError`.
 - **`src/field.lex`** — `FixField` type and list helpers: `get`, `require`, `has`, `set`, `validate_one_of`.
 - **`src/message.lex`** — `FixMessage` type, standard header builder, structural accessors.
-- **`src/conformance.lex`** — Pure pre-execution conformance validation. `validate_new_order` checks all required tags, validates Side/OrdType/TimeInForce against the FIX 4.4 enum catalogs, enforces the `Limit → Price required` rule, and returns all violations at once.
-- **`src/v44/enums.lex`** — Strongly-typed ADTs for `Side`, `OrdType`, `TimeInForce`, `ExecType`, `OrdStatus` with `to_str`/`from_str` round-trips.
-- **`src/v44/new_order_single.lex`** — `NewOrderSingle` typed record + `to_fix_message` / `from_fix_message` codec.
-- **`src/v44/execution_report.lex`** — `ExecutionReport` typed record + codec.
+- **`src/conformance.lex`** — Pure pre-execution conformance validation. `validate_new_order` checks all required tags, validates Side/OrdType/TimeInForce against the FIX 4.4 enum catalogs, enforces the `Limit → Price required` rule, and returns all violations at once. Sibling validators cover cancel (`validate_order_cancel`), replace (`validate_order_cancel_replace`), status (`validate_order_status`), and reject (`validate_order_cancel_reject`). The cross-message rule `validate_cancel_replace_against` rejects a replace that changes an immutable attribute (Side or Symbol) of the order it amends.
+- **`src/v44/enums.lex`** — Strongly-typed ADTs for `Side`, `OrdType`, `TimeInForce`, `ExecType`, `OrdStatus`, `CxlRejReason`, `CxlRejResponseTo` with `to_str`/`from_str` round-trips.
+- **`src/v44/new_order_single.lex`** — `NewOrderSingle` (MsgType=D) typed record + `to_fix_message` / `from_fix_message` codec.
+- **`src/v44/execution_report.lex`** — `ExecutionReport` (MsgType=8) typed record + codec.
+- **`src/v44/order_cancel_request.lex`** — `OrderCancelRequest` (MsgType=F) typed record + codec.
+- **`src/v44/order_cancel_replace_request.lex`** — `OrderCancelReplaceRequest` (MsgType=G) typed record + codec.
+- **`src/v44/order_status_request.lex`** — `OrderStatusRequest` (MsgType=H) typed record + codec.
+- **`src/v44/order_cancel_reject.lex`** — `OrderCancelReject` (MsgType=9) typed record + codec.
 
 ## Usage
 
