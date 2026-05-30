@@ -11,7 +11,7 @@ Requires **lex-lang 0.9.4+**.
 ## What it ships
 
 - **`src/tag.lex`** — FIX tag number constants as typed functions.
-- **`src/error.lex`** — `FixError` ADT: `MissingRequiredTag`, `InvalidTagValue`, `UnsupportedMsgType`, `ConformanceViolation`, `ParseError`.
+- **`src/error.lex`** — `FixError` ADT: `MissingRequiredTag`, `InvalidTagValue`, `UnsupportedMsgType`, `ConformanceViolation`, `ParseError`, `SequenceGap`, `SequenceTooLow`.
 - **`src/field.lex`** — `FixField` type and list helpers: `get`, `require`, `has`, `set`, `validate_one_of`.
 - **`src/message.lex`** — `FixMessage` type, standard header builder, structural accessors.
 - **`src/conformance.lex`** — Pure pre-execution conformance validation. `validate_new_order` checks all required tags, validates Side/OrdType/TimeInForce against the FIX 4.4 enum catalogs, enforces the `Limit → Price required` rule, and returns all violations at once. Sibling validators cover cancel (`validate_order_cancel`), replace (`validate_order_cancel_replace`), status (`validate_order_status`), and reject (`validate_order_cancel_reject`). The cross-message rule `validate_cancel_replace_against` rejects a replace that changes an immutable attribute (Side or Symbol) of the order it amends.
@@ -22,6 +22,15 @@ Requires **lex-lang 0.9.4+**.
 - **`src/v44/order_cancel_replace_request.lex`** — `OrderCancelReplaceRequest` (MsgType=G) typed record + codec.
 - **`src/v44/order_status_request.lex`** — `OrderStatusRequest` (MsgType=H) typed record + codec.
 - **`src/v44/order_cancel_reject.lex`** — `OrderCancelReject` (MsgType=9) typed record + codec.
+
+### Session layer (`src/session/`)
+
+The session layer owns the FIX session *protocol* — the logon handshake, sequence-number discipline, and heartbeating. It is pure: the actual TCP transport lives in lex-web, so nothing here opens a socket.
+
+- **`src/session/session.lex`** — pure session state machine. `SessionState` (`Disconnected`/`LoggingIn`/`Active`/`LoggingOut`) × `SessionEvent` (`Connect`/`LogonAck`/`Heartbeat`/`TestRequest`/`Logout`/`Disconnect`) → `session_transition`, which returns the next state or a descriptive rejection. A `Disconnect` is honoured from any state.
+- **`src/session/sequence.lex`** — `SeqStore` (outbound/inbound counters). `next_seq` (pure: returns the number to send + advanced store), `record_inbound`, `reset`, and `validate_incoming_seq`, which classifies an inbound `MsgSeqNum` as in-order, a recoverable `SequenceGap` (→ ResendRequest), or a fatal `SequenceTooLow`.
+- **`src/session/messages.lex`** — typed records + codecs for the admin messages: `Logon` (A), `Logout` (5), `Heartbeat` (0), `TestRequest` (1), `ResendRequest` (2), `SequenceReset` (4).
+- **`src/session/heartbeat.lex`** — pure liveness logic: `should_send_heartbeat`, `should_send_test_request`, and `respond_to_test_request`, which builds the Heartbeat that echoes an inbound TestRequest's `TestReqID`.
 
 ## Usage
 

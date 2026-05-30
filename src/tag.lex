@@ -76,6 +76,18 @@ fn mt_order_cancel_reject() -> Str {
   "9"
 }
 
+fn mt_test_request() -> Str {
+  "1"
+}
+
+fn mt_resend_request() -> Str {
+  "2"
+}
+
+fn mt_sequence_reset() -> Str {
+  "4"
+}
+
 # ---- Order / execution fields ------------------------------------
 fn cl_ord_id() -> Int {
   11
@@ -183,5 +195,38 @@ fn cxl_rej_reason() -> Int {
 
 fn cxl_rej_response_to() -> Int {
   434
+}
+
+# ---- Session / admin fields --------------------------------------
+fn encrypt_method() -> Int {
+  98
+}
+
+fn heart_bt_int() -> Int {
+  108
+}
+
+fn test_req_id() -> Int {
+  112
+}
+
+fn reset_seq_num_flag() -> Int {
+  141
+}
+
+fn begin_seq_no() -> Int {
+  7
+}
+
+fn end_seq_no() -> Int {
+  16
+}
+
+fn new_seq_no() -> Int {
+  36
+}
+
+fn gap_fill_flag() -> Int {
+  123
 }
 

@@ -9,7 +9,7 @@ import "std.str" as str
 
 import "std.int" as int
 
-type FixError = MissingRequiredTag(Int) | InvalidTagValue((Int, Str)) | UnsupportedMsgType(Str) | ConformanceViolation(Str) | ParseError(Str)
+type FixError = MissingRequiredTag(Int) | InvalidTagValue((Int, Str)) | UnsupportedMsgType(Str) | ConformanceViolation(Str) | ParseError(Str) | SequenceGap((Int, Int)) | SequenceTooLow((Int, Int))
 
 fn describe(e :: FixError) -> Str {
   match e {
@@ -18,6 +18,8 @@ fn describe(e :: FixError) -> Str {
     UnsupportedMsgType(mt) => str.concat("unsupported MsgType: ", mt),
     ConformanceViolation(msg) => str.concat("conformance violation: ", msg),
     ParseError(msg) => str.concat("parse error: ", msg),
+    SequenceGap(expected, got) => str.concat("sequence gap: expected ", str.concat(int.to_str(expected), str.concat(", got ", str.concat(int.to_str(got), " (resend required)")))),
+    SequenceTooLow(expected, got) => str.concat("sequence too low: expected ", str.concat(int.to_str(expected), str.concat(", got ", int.to_str(got)))),
   }
 }
 
