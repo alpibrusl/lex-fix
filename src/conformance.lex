@@ -27,6 +27,8 @@ import "./message" as msg
 
 import "./tag" as tag
 
+import "./venue" as venue
+
 # ---- Internal helpers --------------------------------------------
 fn add_error(errs :: List[e.FixError], err :: e.FixError) -> List[e.FixError] {
   list.concat(errs, [err])
@@ -268,6 +270,82 @@ fn validate_order_cancel_reject(m :: msg.FixMessage) -> Result[msg.FixMessage, L
     Ok(m)
   } else {
     Err(errs7)
+  }
+}
+
+# ---- Venue-specific conformance ----------------------------------
+# Apply one venue restriction token to a message, accumulating any
+# violation. Unrecognized tokens are ignored so the registry can carry
+# forward-compatible restrictions.
+fn apply_restriction(fields :: List[field.FixField], r :: Str, errs :: List[e.FixError]) -> List[e.FixError] {
+  if r == "no_stop_orders" {
+    match field.get(fields, tag.ord_type()) {
+      None => errs,
+      Some(t) => if t == "3" or t == "4" {
+        add_error(errs, ConformanceViolation(str.concat("venue does not support stop orders (OrdType=", str.concat(t, ")"))))
+      } else {
+        errs
+      },
+    }
+  } else {
+    if r == "no_market_orders" {
+      match field.get(fields, tag.ord_type()) {
+        None => errs,
+        Some(t) => if t == "1" {
+          add_error(errs, ConformanceViolation("venue does not support market orders (OrdType=1)"))
+        } else {
+          errs
+        },
+      }
+    } else {
+      match str.strip_prefix(r, "min_qty_") {
+        None => errs,
+        Some(n_str) => match str.to_int(n_str) {
+          None => errs,
+          Some(minq) => match field.get(fields, tag.order_qty()) {
+            None => errs,
+            Some(q_str) => match str.to_int(q_str) {
+              None => errs,
+              Some(q) => if q < minq {
+                add_error(errs, ConformanceViolation(str.concat("OrderQty below venue minimum of ", n_str)))
+              } else {
+                errs
+              },
+            },
+          },
+        },
+      }
+    }
+  }
+}
+
+# Apply a venue profile on top of an existing error list: every custom
+# tag is required, then each restriction token is checked.
+fn apply_venue_rules(m :: msg.FixMessage, profile :: venue.VenueProfile, errs :: List[e.FixError]) -> List[e.FixError] {
+  let fields := m.fields
+  let with_tags := list.fold(profile.custom_tags, errs, fn (acc :: List[e.FixError], t :: Int) -> List[e.FixError] {
+    check_required(fields, t, acc)
+  })
+  list.fold(profile.restrictions, with_tags, fn (acc :: List[e.FixError], r :: Str) -> List[e.FixError] {
+    apply_restriction(fields, r, acc)
+  })
+}
+
+# Validate a New Order Single against base FIX 4.4 conformance *and* a
+# venue profile. Base conformance runs first; venue-specific rules are
+# layered on top. All violations (base + venue) accumulate so the
+# caller sees every problem at once. An Unknown venue carries an empty
+# profile and therefore reduces to base conformance.
+fn validate_new_order_venue(m :: msg.FixMessage, profile :: venue.VenueProfile) -> Result[msg.FixMessage, List[e.FixError]] {
+  let base_errs := match validate_new_order(m) {
+    Ok(_) => [],
+    Err(es) => es,
+  }
+  let all_errs := apply_venue_rules(m, profile, base_errs)
+  if list.len(all_errs) == 0 {
+    Ok(m)
+  } else {
+    Err(all_errs)
   }
 }
 
