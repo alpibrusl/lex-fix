@@ -225,8 +225,51 @@ fn test_cancel_reject_invalid_response_to_fails() -> Result[Unit, Str] {
   }
 }
 
+# ---- validate_cancel_replace_against (cross-message) ------------
+# A replace must preserve Side (54) and Symbol (55) of the original
+# order. The original is a NewOrderSingle (Buy MSFT); the replace
+# amends qty/price but must not flip Side or change Symbol.
+
+fn test_replace_same_side_passes() -> Result[Unit, Str] {
+  let orig    := valid_nos_message()          # Buy MSFT
+  let replace := valid_ocrr_message()         # Buy MSFT, amended qty/price
+  match conf.validate_cancel_replace_against(orig, replace) {
+    Err(_) => fail("replace preserving Side/Symbol should pass"),
+    Ok(_)  => pass(),
+  }
+}
+
+fn test_replace_changes_side_fails() -> Result[Unit, Str] {
+  let orig    := valid_nos_message()          # Buy
+  let flipped := ocrr.to_fix_message(
+    ocrr.cancel_replace_request(
+      "ORD-003", "ORD-001", "MSFT", Sell, 150, Limit,
+      Some("124.00"), Day, "20260528-10:01:00.000", "ALGO01", "EXCH01", None
+    ), 3)
+  match conf.validate_cancel_replace_against(orig, flipped) {
+    Ok(_)   => fail("replace that flips Side should be rejected"),
+    Err(es) => assert_true(list.len(es) > 0, "has errors"),
+  }
+}
+
+fn test_replace_changes_symbol_fails() -> Result[Unit, Str] {
+  let orig     := valid_nos_message()         # MSFT
+  let resymbol := ocrr.to_fix_message(
+    ocrr.cancel_replace_request(
+      "ORD-003", "ORD-001", "AAPL", Buy, 150, Limit,
+      Some("124.00"), Day, "20260528-10:01:00.000", "ALGO01", "EXCH01", None
+    ), 3)
+  match conf.validate_cancel_replace_against(orig, resymbol) {
+    Ok(_)   => fail("replace that changes Symbol should be rejected"),
+    Err(es) => assert_true(list.len(es) > 0, "has errors"),
+  }
+}
+
 fn suite() -> List[Result[Unit, Str]] {
   [
+    test_replace_same_side_passes(),
+    test_replace_changes_side_fails(),
+    test_replace_changes_symbol_fails(),
     test_valid_order_passes(),
     test_missing_symbol_fails(),
     test_invalid_side_fails(),

@@ -123,6 +123,14 @@ fn test_ocr_roundtrip() -> Result[Unit, Str] {
   }
 }
 
+fn test_ocr_qty_roundtrip() -> Result[Unit, Str] {
+  let m := ocr.to_fix_message(sample_ocr(), 2)
+  match ocr.from_fix_message(m) {
+    Err(_)  => fail("roundtrip parse failed"),
+    Ok(r)   => assert_true(r.order_qty == 100, "order_qty roundtrip"),
+  }
+}
+
 # ---- order_cancel_replace_request (MsgType=G) -------------------
 
 fn test_ocrr_msg_type() -> Result[Unit, Str] {
@@ -163,6 +171,14 @@ fn test_ocrr_roundtrip() -> Result[Unit, Str] {
     Err(_) => fail("roundtrip parse failed"),
     Ok(r)  => assert_true(r.cl_ord_id == "ORD-003" and r.orig_cl_ord_id == "ORD-001",
                            "cl_ord_id and orig_cl_ord_id roundtrip"),
+  }
+}
+
+fn test_ocrr_qty_roundtrip() -> Result[Unit, Str] {
+  let m := ocrr.to_fix_message(sample_ocrr(), 3)
+  match ocrr.from_fix_message(m) {
+    Err(_) => fail("roundtrip parse failed"),
+    Ok(r)  => assert_true(r.order_qty == 150, "order_qty roundtrip"),
   }
 }
 
@@ -249,11 +265,13 @@ fn suite() -> List[Result[Unit, Str]] {
     test_ocr_account_present(),
     test_ocr_no_text(),
     test_ocr_roundtrip(),
+    test_ocr_qty_roundtrip(),
     test_ocrr_msg_type(),
     test_ocrr_orig_cl_ord_id(),
     test_ocrr_price_present(),
     test_ocrr_ord_type(),
     test_ocrr_roundtrip(),
+    test_ocrr_qty_roundtrip(),
     test_osr_msg_type(),
     test_osr_order_id_present(),
     test_osr_no_account(),

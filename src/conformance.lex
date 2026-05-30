@@ -16,6 +16,7 @@
 # Effects: none.
 
 import "std.list" as list
+import "std.str"  as str
 
 import "./error"   as e
 import "./field"   as field
@@ -202,6 +203,45 @@ fn validate_order_cancel_replace(m :: msg.FixMessage) -> Result[msg.FixMessage, 
   }
 
   if list.len(errs11) == 0 { Ok(m) } else { Err(errs11) }
+}
+
+# Cross-message conformance: an Order Cancel/Replace Request (G) must
+# not alter immutable attributes of the order it amends. Per FIX 4.4,
+# a replace may change qty/price/TIF but MUST preserve Side (54) and
+# Symbol (55). `orig` is the original order (e.g. the NewOrderSingle as
+# a FixMessage); `replace` is the inbound cancel/replace request. On
+# success the validated `replace` message is returned unchanged.
+fn check_preserved(
+  orig    :: msg.FixMessage,
+  replace :: msg.FixMessage,
+  t       :: Int,
+  label   :: Str,
+  errs    :: List[e.FixError]
+) -> List[e.FixError] {
+  match field.get(orig.fields, t) {
+    None     => errs,
+    Some(ov) => match field.get(replace.fields, t) {
+      None     => add_error(errs, MissingRequiredTag(t)),
+      Some(rv) => if ov == rv {
+                    errs
+                  } else {
+                    add_error(errs, ConformanceViolation(
+                      str.concat(label,
+                        str.concat(" may not change on replace: ",
+                          str.concat(ov, str.concat(" -> ", rv))))))
+                  },
+    },
+  }
+}
+
+fn validate_cancel_replace_against(
+  orig    :: msg.FixMessage,
+  replace :: msg.FixMessage
+) -> Result[msg.FixMessage, List[e.FixError]] {
+  let errs0 := []
+  let errs1 := check_preserved(orig, replace, tag.side(),   "Side",   errs0)
+  let errs2 := check_preserved(orig, replace, tag.symbol(), "Symbol", errs1)
+  if list.len(errs2) == 0 { Ok(replace) } else { Err(errs2) }
 }
 
 # Validate a FIX 4.4 Order Status Request (MsgType=H).

@@ -66,6 +66,14 @@ fn test_to_fix_message_no_account() -> Result[Unit, Str] {
   assert_true(not (field.has(m.fields, tag.account())), "no account")
 }
 
+fn test_roundtrip_qty() -> Result[Unit, Str] {
+  let m := nos.to_fix_message(sample_nos(), 1)
+  match nos.from_fix_message(m) {
+    Err(_) => fail("roundtrip parse failed"),
+    Ok(r)  => assert_true(r.order_qty == 100, "order_qty roundtrip"),
+  }
+}
+
 fn suite() -> List[Result[Unit, Str]] {
   [
     test_to_fix_message_msg_type(),
@@ -73,6 +81,7 @@ fn suite() -> List[Result[Unit, Str]] {
     test_to_fix_message_side(),
     test_to_fix_message_price(),
     test_to_fix_message_no_account(),
+    test_roundtrip_qty(),
   ]
 }
 
