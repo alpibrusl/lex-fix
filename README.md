@@ -6,7 +6,7 @@ lex-fix turns FIX messages into first-class typed Lex values. Instead of passing
 
 Built on [lex-money](https://github.com/alpibrusl/lex-money) for monetary values and [lex-schema](https://github.com/alpibrusl/lex-schema) for payload validation. Companion to [lex-trade](https://github.com/alpibrusl/lex-trade), which layers risk limits and pre-trade checks on top of the FIX protocol surface.
 
-Requires **lex-lang 0.9.4+**.
+Requires **lex-lang 0.9.7+**.
 
 ## What it ships
 
@@ -36,14 +36,13 @@ The session layer owns the FIX session *protocol* — the logon handshake, seque
 ## Usage
 
 ```lex
-import "lex-fix/v44/enums"           as en
-import "lex-fix/v44/new_order_single" as nos
-import "lex-fix/conformance"          as conf
-import "lex-fix/message"              as msg
+import "lex-fix/src/v44/enums"            as en
+import "lex-fix/src/v44/new_order_single" as nos
+import "lex-fix/src/conformance"          as conf
 
 let order := nos.new_order(
-  "ORD-001", "MSFT", Buy, 100,
-  Limit, Some("125.50"), Day,
+  "ORD-001", "MSFT", Buy(()), 100,
+  Limit(()), Some("125.50"), Day(()),
   "20260527-09:30:00.000",
   "ALGO01", "EXCH01", None)
 
