@@ -2,6 +2,7 @@
 name    = "lex-fix"
 version = "0.1.0"
 lex     = "0.9.7"
+
 [dependencies]
-lex-schema = { path = "../lex-schema" }
-lex-money  = { path = "../lex-money" }
+lex-schema = { git = "https://github.com/alpibrusl/lex-schema" }
+lex-money  = { git = "https://github.com/alpibrusl/lex-money" }
