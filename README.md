@@ -1,5 +1,9 @@
 # lex-fix
 
+[![CI](https://github.com/alpibrusl/lex-fix/actions/workflows/ci.yml/badge.svg)](https://github.com/alpibrusl/lex-fix/actions/workflows/ci.yml)
+
+**Part of the [Lex](https://lexlang.org) project** — Finance · [Manifesto](https://lexlang.org/manifesto) · [All packages](https://lexlang.org)
+
 FIX 4.4 protocol adapter for Lex. Typed messages, compile-time conformance, pure validation.
 
 Instead of passing stringly-typed tag-value bags through a trading system, you construct a `NewOrderSingle` record with typed fields — `side :: Side`, `ord_type :: OrdType`, `price :: Option[Str]` — and the conformance validator checks every required tag and enum value before the message touches an exchange connection.
